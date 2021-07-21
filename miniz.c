@@ -197,6 +197,12 @@ typedef unsigned char mz_validate_uint64[sizeof(mz_uint64)==8 ? 1 : -1];
   #define MZ_FORCEINLINE inline
 #endif
 
+#if defined(__GNUC__)
+#define __unused__ __attribute__((unused))
+#else
+#define __unused__
+#endif
+
 #ifdef __cplusplus
   extern "C" {
 #endif
@@ -236,9 +242,9 @@ void mz_free(void *p)
 
 #ifndef MINIZ_NO_ZLIB_APIS
 
-static void *def_alloc_func(void *opaque, size_t items, size_t size) { (void)opaque, (void)items, (void)size; return MZ_MALLOC(items * size); }
-static void def_free_func(void *opaque, void *address) { (void)opaque, (void)address; MZ_FREE(address); }
-static void *def_realloc_func(void *opaque, void *address, size_t items, size_t size) { (void)opaque, (void)address, (void)items, (void)size; return MZ_REALLOC(address, items * size); }
+static __unused__ void *def_alloc_func(void *opaque, size_t items, size_t size) { (void)opaque, (void)items, (void)size; return MZ_MALLOC(items * size); }
+static __unused__ void def_free_func(void *opaque, void *address) { (void)opaque, (void)address; MZ_FREE(address); }
+static __unused__ void *def_realloc_func(void *opaque, void *address, size_t items, size_t size) { (void)opaque, (void)address, (void)items, (void)size; return MZ_REALLOC(address, items * size); }
 
 const char *mz_version(void)
 {
@@ -726,7 +732,10 @@ tinfl_status tinfl_decompress(tinfl_decompressor *r, const mz_uint8 *pIn_buf_nex
       {
         mz_uint8 *p = r->m_tables[0].m_code_size; mz_uint i;
         r->m_table_sizes[0] = 288; r->m_table_sizes[1] = 32; TINFL_MEMSET(r->m_tables[1].m_code_size, 5, 32);
-        for ( i = 0; i <= 143; ++i) *p++ = 8; for ( ; i <= 255; ++i) *p++ = 9; for ( ; i <= 279; ++i) *p++ = 7; for ( ; i <= 287; ++i) *p++ = 8;
+        for ( i = 0; i <= 143; ++i) *p++ = 8; 
+        for ( ; i <= 255; ++i) *p++ = 9; 
+        for ( ; i <= 279; ++i) *p++ = 7; 
+        for ( ; i <= 287; ++i) *p++ = 8;
       }
       else
       {
@@ -1544,7 +1553,11 @@ static MZ_FORCEINLINE void tdefl_find_match(tdefl_compressor *d, mz_uint lookahe
         if ((d->m_dict[probe_pos + match_len] == c0) && (d->m_dict[probe_pos + match_len - 1] == c1)) break;
       TDEFL_PROBE; TDEFL_PROBE; TDEFL_PROBE;
     }
-    if (!dist) break; p = s; q = d->m_dict + probe_pos; for (probe_len = 0; probe_len < max_match_len; probe_len++) if (*p++ != *q++) break;
+    if (!dist) break; 
+    p = s; q = d->m_dict + probe_pos; 
+    for (probe_len = 0; probe_len < max_match_len; probe_len++) 
+      if (*p++ != *q++) 
+        break;
     if (probe_len > match_len)
     {
       *pMatch_dist = dist; if ((*pMatch_len = match_len = probe_len) == max_match_len) return;
